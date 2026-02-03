@@ -1,3 +1,5 @@
+// ignore_for_file: discarded_futures
+
 import 'dart:async';
 
 import 'package:better_player_plus/better_player_plus.dart';
@@ -11,36 +13,26 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 ///Widget which uses provided controller to render video player.
 class BetterPlayer extends StatefulWidget {
-  const BetterPlayer({Key? key, required this.controller}) : super(key: key);
+  const BetterPlayer({super.key, required this.controller});
 
-  factory BetterPlayer.network(
-    String url, {
-    BetterPlayerConfiguration? betterPlayerConfiguration,
-  }) =>
-      BetterPlayer(
-        controller: BetterPlayerController(
-          betterPlayerConfiguration ?? const BetterPlayerConfiguration(),
-          betterPlayerDataSource: BetterPlayerDataSource(BetterPlayerDataSourceType.network, url),
-        ),
-      );
+  factory BetterPlayer.network(String url, {BetterPlayerConfiguration? betterPlayerConfiguration}) => BetterPlayer(
+    controller: BetterPlayerController(
+      betterPlayerConfiguration ?? const BetterPlayerConfiguration(),
+      betterPlayerDataSource: BetterPlayerDataSource(BetterPlayerDataSourceType.network, url),
+    ),
+  );
 
-  factory BetterPlayer.file(
-    String url, {
-    BetterPlayerConfiguration? betterPlayerConfiguration,
-  }) =>
-      BetterPlayer(
-        controller: BetterPlayerController(
-          betterPlayerConfiguration ?? const BetterPlayerConfiguration(),
-          betterPlayerDataSource: BetterPlayerDataSource(BetterPlayerDataSourceType.file, url),
-        ),
-      );
+  factory BetterPlayer.file(String url, {BetterPlayerConfiguration? betterPlayerConfiguration}) => BetterPlayer(
+    controller: BetterPlayerController(
+      betterPlayerConfiguration ?? const BetterPlayerConfiguration(),
+      betterPlayerDataSource: BetterPlayerDataSource(BetterPlayerDataSourceType.file, url),
+    ),
+  );
 
   final BetterPlayerController controller;
 
   @override
-  _BetterPlayerState createState() {
-    return _BetterPlayerState();
-  }
+  State<BetterPlayer> createState() => _BetterPlayerState();
 }
 
 class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver {
@@ -55,7 +47,7 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
   bool _initialized = false;
 
   ///Subscription for controller events
-  StreamSubscription? _controllerEventSubscription;
+  StreamSubscription<dynamic>? _controllerEventSubscription;
 
   @override
   void initState() {
@@ -80,7 +72,7 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
     _controllerEventSubscription = widget.controller.controllerEventStream.listen(onControllerEvent);
 
     //Default locale
-    var locale = const Locale("en", "US");
+    var locale = const Locale('en', 'US');
     try {
       if (mounted) {
         final contextLocale = Localizations.localeOf(context);
@@ -100,15 +92,17 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
     if (_isFullScreen) {
       WakelockPlus.disable();
       _navigatorState.maybePop();
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-          overlays: _betterPlayerConfiguration.systemOverlaysAfterFullScreen);
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.manual,
+        overlays: _betterPlayerConfiguration.systemOverlaysAfterFullScreen,
+      );
       SystemChrome.setPreferredOrientations(_betterPlayerConfiguration.deviceOrientationsAfterFullScreen);
     }
 
     WidgetsBinding.instance.removeObserver(this);
     _controllerEventSubscription?.cancel();
     widget.controller.dispose();
-    VisibilityDetectorController.instance.forget(Key("${widget.controller.hashCode}_key"));
+    VisibilityDetectorController.instance.forget(Key('${widget.controller.hashCode}_key'));
     super.dispose();
   }
 
@@ -125,13 +119,10 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
     switch (event) {
       case BetterPlayerControllerEvent.openFullscreen:
         onFullScreenChanged();
-        break;
       case BetterPlayerControllerEvent.hideFullscreen:
         onFullScreenChanged();
-        break;
       default:
         setState(() {});
-        break;
     }
   }
 
@@ -150,34 +141,27 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
   }
 
   @override
-  Widget build(BuildContext context) {
-    return BetterPlayerControllerProvider(
-      controller: widget.controller,
-      child: _buildPlayer(),
-    );
-  }
+  Widget build(BuildContext context) =>
+      BetterPlayerControllerProvider(controller: widget.controller, child: _buildPlayer());
 
   Widget _buildFullScreenVideo(
-      BuildContext context, Animation<double> animation, BetterPlayerControllerProvider controllerProvider) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Container(
-        alignment: Alignment.center,
-        color: Colors.black,
-        child: controllerProvider,
-      ),
-    );
-  }
+    BuildContext context,
+    Animation<double> animation,
+    BetterPlayerControllerProvider controllerProvider,
+  ) => Scaffold(
+    resizeToAvoidBottomInset: false,
+    body: Container(alignment: Alignment.center, color: Colors.black, child: controllerProvider),
+  );
 
-  AnimatedWidget _defaultRoutePageBuilder(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, BetterPlayerControllerProvider controllerProvider) {
-    return AnimatedBuilder(
-      animation: animation,
-      builder: (BuildContext context, Widget? child) {
-        return _buildFullScreenVideo(context, animation, controllerProvider);
-      },
-    );
-  }
+  AnimatedWidget _defaultRoutePageBuilder(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    BetterPlayerControllerProvider controllerProvider,
+  ) => AnimatedBuilder(
+    animation: animation,
+    builder: (BuildContext context, Widget? child) => _buildFullScreenVideo(context, animation, controllerProvider),
+  );
 
   Widget _fullScreenRoutePageBuilder(
     BuildContext context,
@@ -198,12 +182,11 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
     final TransitionRoute<void> route = PageRouteBuilder<void>(
       settings: const RouteSettings(),
       pageBuilder: _fullScreenRoutePageBuilder,
-      reverseTransitionDuration: Duration.zero,
     );
 
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    if (_betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation == true) {
+    if (_betterPlayerConfiguration.autoDetectFullscreenDeviceOrientation) {
       final aspectRatio = widget.controller.videoPlayerController?.value.aspectRatio ?? 1.0;
       List<DeviceOrientation> deviceOrientations;
       if (aspectRatio < 1.0) {
@@ -219,31 +202,31 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
     }
 
     if (!_betterPlayerConfiguration.allowedScreenSleep) {
-      WakelockPlus.enable();
+      await WakelockPlus.enable();
     }
 
-    await Navigator.of(context, rootNavigator: true).push(route);
-    _isFullScreen = false;
-    widget.controller.exitFullScreen();
+    if (context.mounted) {
+      await Navigator.of(context, rootNavigator: true).push(route);
+      _isFullScreen = false;
+      widget.controller.backFromFullScreen();
+    }
 
     // The wakelock plugins checks whether it needs to perform an action internally,
     // so we do not need to check Wakelock.isEnabled.
-    WakelockPlus.disable();
+    await WakelockPlus.disable();
 
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: _betterPlayerConfiguration.systemOverlaysAfterFullScreen);
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: _betterPlayerConfiguration.systemOverlaysAfterFullScreen,
+    );
     await SystemChrome.setPreferredOrientations(_betterPlayerConfiguration.deviceOrientationsAfterFullScreen);
   }
 
-  Widget _buildPlayer() {
-    return VisibilityDetector(
-      key: Key("${widget.controller.hashCode}_key"),
-      onVisibilityChanged: (VisibilityInfo info) => widget.controller.onPlayerVisibilityChanged(info.visibleFraction),
-      child: BetterPlayerWithControls(
-        controller: widget.controller,
-      ),
-    );
-  }
+  Widget _buildPlayer() => VisibilityDetector(
+    key: Key('${widget.controller.hashCode}_key'),
+    onVisibilityChanged: (VisibilityInfo info) => widget.controller.onPlayerVisibilityChanged(info.visibleFraction),
+    child: BetterPlayerWithControls(controller: widget.controller),
+  );
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -253,5 +236,10 @@ class _BetterPlayerState extends State<BetterPlayer> with WidgetsBindingObserver
 }
 
 ///Page route builder used in fullscreen mode.
-typedef BetterPlayerRoutePageBuilder = Widget Function(BuildContext context, Animation<double> animation,
-    Animation<double> secondaryAnimation, BetterPlayerControllerProvider controllerProvider);
+typedef BetterPlayerRoutePageBuilder =
+    Widget Function(
+      BuildContext context,
+      Animation<double> animation,
+      Animation<double> secondaryAnimation,
+      BetterPlayerControllerProvider controllerProvider,
+    );
